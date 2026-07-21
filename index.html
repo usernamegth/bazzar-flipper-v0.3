@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bazaar Flip Scanner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <div>
+      <h1>Bazaar Flip Scanner</h1>
+      <p class="eyebrow">Hypixel Skyblock &middot; bazaar liquidity scan</p>
+    </div>
+  </div>
+  <div class="status" id="status">
+    <span class="dot" id="status-dot"></span>
+    <span id="status-text">Loading&hellip;</span>
+  </div>
+</header>
+
+<section class="rules">
+  <div class="rule">
+    <span class="rule-label">Est. volume, each side</span>
+    <span class="rule-value">&ge; <span id="volume-threshold">&ndash;</span></span>
+    <span class="rule-sub">over ~<span id="window-days">&ndash;</span> days</span>
+  </div>
+  <div class="rule">
+    <span class="rule-label">Spread</span>
+    <span class="rule-value">&ge; <span id="spread-threshold">&ndash;</span>%</span>
+    <span class="rule-sub">instant-buy vs instant-sell</span>
+  </div>
+  <div class="rule">
+    <span class="rule-label">Refresh</span>
+    <span class="rule-value">every <span id="poll-interval">&ndash;</span> min</span>
+    <span class="rule-sub">next sync &asymp; <span id="countdown">&ndash;</span></span>
+  </div>
+  <div class="rule">
+    <span class="rule-label">Matches</span>
+    <span class="rule-value" id="match-count">&ndash;</span>
+    <span class="rule-sub"><span id="scanned-count">&ndash;</span> items scanned</span>
+  </div>
+</section>
+
+<main>
+  <div id="error-banner" class="error-banner" hidden></div>
+
+  <div class="table-wrap">
+  <table class="ledger" id="ledger">
+    <thead>
+      <tr>
+        <th class="col-rank">#</th>
+        <th class="col-name">Item</th>
+        <th class="col-num">Avg Price</th>
+        <th class="col-num">Instant Sell</th>
+        <th class="col-num">Instant Buy</th>
+        <th class="col-spread">Spread</th>
+        <th class="col-num">Est. Buy Vol</th>
+        <th class="col-num">Est. Sell Vol</th>
+        <th class="col-alert">Alert</th>
+      </tr>
+    </thead>
+    <tbody id="ledger-body">
+      <tr class="empty-row"><td colspan="9">Loading data.json&hellip;</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="table-note">Ranked by average of instant-buy and instant-sell price, highest first.</p>
+
+  <p class="footnote">
+    This page is entirely static. A scheduled GitHub Actions workflow fetches Hypixel's
+    bazaar data, filters it, and commits the result to <code>data.json</code> in this repo -
+    this page just reads that file. Volume is estimated by scaling Hypixel's own trailing
+    7-day trade volume (<code>buyMovingWeek</code> / <code>sellMovingWeek</code>) down to
+    the configured window.
+  </p>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
