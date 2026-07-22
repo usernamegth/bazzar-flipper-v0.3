@@ -1,0 +1,67 @@
+name: Update Bazaar Data
+
+on:
+  schedule:
+    # Every 5 minutes - this is the fastest GitHub Actions supports.
+    # GitHub enforces a hard 5-minute minimum on scheduled workflows; a
+    # */1 cron entry is accepted as valid syntax but simply will not fire
+    # that often, and even */5 can run a few minutes late during busy
+    # periods. Hypixel's own bazaar data refreshes ~once a minute, so this
+    # is close to the ceiling of what's meaningful anyway.
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}   # lets you trigger a run manually from the Actions tab
+
+permissions:
+  contents: write   # needed so the workflow can commit data.json back to the repo
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch, check, and commit every ~60s (4x per trigger)
+        # GitHub only *triggers* this workflow every 5 minutes (its floor), but
+        # nothing stops the job itself from looping internally once it's
+        # running. This does 4 fetch/commit cycles about 60s apart, so the
+        # published data is at most ~60-90s stale rather than ~5 minutes -
+        # as close to "every 1 minute" as GitHub Actions can get without a
+        # third-party scheduler. Stays well under the 5-minute mark so it
+        # never overlaps the next scheduled trigger.
+        env:
+          VOLUME_THRESHOLD: "60000"
+          SPREAD_THRESHOLD_PCT: "20"
+          WINDOW_DAYS: "5"
+          POLL_INTERVAL_MINUTES: "1"
+          MANIPULATION_WINDOW_MINUTES: "10"
+          MANIPULATION_PCT_THRESHOLD: "100"
+          MANIPULATION_MIN_SELL_PRICE: "1000"
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          for i in 1 2 3 4; do
+            echo "=== Cycle $i/4 ==="
+            python scripts/poll_bazaar.py
+
+            git add docs/data.json price_history.json
+            if ! git diff --staged --quiet; then
+              git commit -m "Update bazaar data (cycle $i) [skip ci]"
+              git push
+            else
+              echo "No change, skipping commit."
+            fi
+
+            if [ "$i" -lt 4 ]; then
+              sleep 60
+            fi
+          done
