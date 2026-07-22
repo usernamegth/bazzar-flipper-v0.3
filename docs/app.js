@@ -110,12 +110,23 @@ async function refresh() {
 
 function tickCountdown() {
   if (!nextSyncAt) { countdownEl.textContent = '–'; return; }
-  const remaining = Math.max(0, Math.round((nextSyncAt - Date.now()) / 1000));
+
+  const diffMs = nextSyncAt - Date.now();
+  if (diffMs <= 0) {
+    // The expected update time has passed but data.json hasn't changed yet.
+    // GitHub's scheduled runs aren't perfectly punctual (they can run a few
+    // minutes late, especially during busy periods), so this is normal -
+    // show that we're actively waiting rather than freezing at "0:00".
+    countdownEl.textContent = 'checking…';
+    return;
+  }
+
+  const remaining = Math.round(diffMs / 1000);
   const m = Math.floor(remaining / 60);
   const s = remaining % 60;
   countdownEl.textContent = `${m}:${s.toString().padStart(2, '0')}`;
 }
 
 refresh();
-setInterval(refresh, 60000);   // check for a fresh data.json every minute (this is free/cheap - it's a static file)
+setInterval(refresh, 20000);   // check for a fresh data.json every 20s (cheap - it's a static file) so a late update is picked up quickly
 setInterval(tickCountdown, 1000);
