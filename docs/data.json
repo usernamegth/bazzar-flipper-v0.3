@@ -3502,8 +3502,8 @@
   ],
   "products_scanned": 2197,
   "last_updated": "2026-09-22T05:28:20.970439+00:00",
-  "error": null,
-  "last_checked": "2026-09-22T05:28:20.979482+00:00",
+  "error": "504 Server Error: Gateway Timeout for url: https://api.hypixel.net/v2/skyblock/bazaar",
+  "last_checked": "2026-09-22T10:11:40.007540+00:00",
   "config": {
     "volume_threshold": 60000.0,
     "spread_threshold_pct": 20.0,
